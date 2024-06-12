@@ -1,4 +1,36 @@
 WITH
+    dates AS (
+        SELECT
+            month_start_date,
+            DATE_SUB(DATE_TRUNC(CURRENT_DATE, MONTH), INTERVAL 6 MONTH) AS earliest_month,
+            DATE_SUB(
+                DATE_TRUNC(CURRENT_DATE(), MONTH),
+                INTERVAL 1 MONTH
+            ) AS latest_month,
+            CONCAT(
+                'network-data-ingest.users_maritime.urs_fb_pos',
+                FORMAT_DATETIME('%Y%m', month_start_date)
+            ) AS dataset_name,
+            FORMAT_DATETIME('%Y%m%d', month_start_date) AS month_end_date_yyyymmdd,
+            DATE_ADD(month_start_date, INTERVAL 9 DAY) AS p1_end_date,
+            DATE_ADD(month_start_date, INTERVAL 10 DAY) AS p2_start_date,
+            DATE_ADD(month_start_date, INTERVAL 19 DAY) AS p2_end_date,
+            DATE_ADD(month_start_date, INTERVAL 20 DAY) AS p3_start_date,
+            LAST_DAY(month_start_date, MONTH) AS month_end_date
+        FROM
+            (
+                SELECT
+                    *
+                FROM
+                    UNNEST (
+                        GENERATE_DATE_ARRAY(
+                            DATE_SUB(DATE_TRUNC(CURRENT_DATE, MONTH), INTERVAL 6 MONTH),
+                            DATE_SUB(DATE_TRUNC(CURRENT_DATE, MONTH), INTERVAL 1 MONTH),
+                            INTERVAL 1 MONTH
+                        )
+                    ) AS month_start_date
+            )
+    ),
     vars AS (
         SELECT
             DATE_SUB(
@@ -22,7 +54,7 @@ WITH
             inm-bi.commercial_product.commercial_product__monthly cp
             JOIN `inm-bi.commercial_product.dim_instance_products` prod ON cp.product_activity_id = prod.product_activity_id
         WHERE
-            DATE_TRUNC(cp.view_month, MONTH) = (
+            DATE_TRUNC(cp.view_month, MONTH) IN (
                 SELECT
                     curr_month
                 FROM
