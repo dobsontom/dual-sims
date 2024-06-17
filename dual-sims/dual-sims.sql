@@ -299,32 +299,33 @@ CREATE OR REPLACE TABLE
                     *
                 FROM
                     position_data_range_3
-            ),
-            vessel AS (
-                SELECT DISTINCT
-                    install_id AS `l_band_imsi`,
-                    vessel_name AS `l_band_vessel_name`,
-                    vessel_owner AS `l_band_vessel_owner`,
-                    vessel_operator AS `l_band_vessel_name`,
-                    account_manager
-                FROM
-                    `inm-bi.maritime_reports.mbu_snapshot_monthly`
             )
+            -- ,
+            -- vessel AS (
+            --     SELECT DISTINCT
+            --         install_id AS `l_band_imsi`,
+            --         vessel_name AS `l_band_vessel_name`,
+            --         vessel_owner AS `l_band_vessel_owner`,
+            --         vessel_operator AS `l_band_vessel_operator`,
+            --         account_manager
+            --     FROM
+            --         `inm-bi.maritime_reports.mbu_snapshot_monthly`
+            -- )
         SELECT
-            ABS(TIMESTAMP_DIFF(minus, plus, HOUR)) time_window_in_hour,
+            ABS(TIMESTAMP_DIFF(minus, plus, HOUR)) AS time_window_in_hour,
             ABS(
                 TIMESTAMP_DIFF(noted_datetime_t1, noted_datetime_t2, MINUTE)
-            ) between_two_accessid_minutes,
+            ) AS between_two_accessid_minutes,
             ST_DISTANCE(
                 ST_GEOGPOINT(longitude_t1, latitude_t1),
                 ST_GEOGPOINT(longitude_t2, latitude_t2)
-            ) * 0.00062137 distance_miles,
-            ST_GEOGPOINT(longitude_t1, latitude_t1) GeoPoint1,
-            ST_GEOGPOINT(longitude_t2, latitude_t2) GeoPoint2,
+            ) * 0.00062137 AS distance_miles,
+            ST_GEOGPOINT(longitude_t1, latitude_t1) AS GeoPoint1,
+            ST_GEOGPOINT(longitude_t2, latitude_t2) AS GeoPoint2,
             *
         FROM
             combined
-            JOIN vessel ON CAST(combined.objectid_t1 AS STRING) = vessel.l_band_imsi
+            -- JOIN vessel ON CAST(combined.objectid_t1 AS STRING) = vessel.l_band_imsi
         WHERE
             rk = 1
         ORDER BY
