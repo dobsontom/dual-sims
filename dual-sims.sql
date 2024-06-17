@@ -165,7 +165,8 @@ CREATE OR REPLACE TABLE
                     *,
                     ROW_NUMBER() OVER (
                         PARTITION BY
-                            group_id_t1
+                            group_id_t1,
+                            DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                         ORDER BY
                             objectid_t1 DESC
                     ) AS rk
@@ -207,7 +208,8 @@ CREATE OR REPLACE TABLE
                     *,
                     ROW_NUMBER() OVER (
                         PARTITION BY
-                            group_id_t1
+                            group_id_t1,
+                            DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                         ORDER BY
                             objectid_t1 DESC
                     ) AS rk
@@ -249,7 +251,8 @@ CREATE OR REPLACE TABLE
                     *,
                     ROW_NUMBER() OVER (
                         PARTITION BY
-                            group_id_t1
+                            group_id_t1,
+                            DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                         ORDER BY
                             objectid_t1 DESC
                     ) AS rk
