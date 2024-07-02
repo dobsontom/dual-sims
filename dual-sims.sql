@@ -39,12 +39,12 @@ CREATE OR REPLACE TABLE
                     prod.subscription_plan_name,
                     prod.group_id,
                     cp.scap_instance_id,
-                    cp.scap_subscription_id,
+                    cp.scap_subscription_plan_id,
                     cp.scap_subscription_plan_name,
                     COUNT(cp.primary_network_name) AS count_imsi
                 FROM
-                    `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly` cp
-                    JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.product_activity_id = prod.product_activity_id
+                    `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly_view` cp
+                    JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.instance_id = prod.instance_id
                 WHERE
                     DATE_TRUNC(cp.view_month, MONTH) IN (
                         SELECT
@@ -56,8 +56,8 @@ CREATE OR REPLACE TABLE
                     AND CONTAINS_SUBSTR(prod.subscription_plan_name, 'FB')
                     AND cp.is_closing_base = 1
                     AND (
-                        group_id IS NOT NULL
-                        OR scap_instance_id IS NOT NULL
+                        prod.group_id IS NOT NULL
+                        OR cp.scap_instance_id IS NOT NULL
                     )
                 GROUP BY
                     prod.product_name,
@@ -67,7 +67,7 @@ CREATE OR REPLACE TABLE
                     prod.subscription_plan_name,
                     prod.group_id,
                     cp.scap_instance_id,
-                    cp.scap_subscription_id,
+                    cp.scap_subscription_plan_id,
                     cp.scap_subscription_plan_name
                 HAVING
                     COUNT(cp.primary_network_name) = 2
@@ -81,14 +81,14 @@ CREATE OR REPLACE TABLE
                     prod.subscription_plan_name,
                     prod.group_id,
                     cp.scap_instance_id,
-                    cp.scap_subscription_id,
+                    cp.scap_subscription_plan_id,
                     cp.scap_subscription_plan_name,
                     cp.primary_network_name,
                     cp.installed_at
                 FROM
-                    `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly` cp
+                    `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly_view` cp
                     JOIN inm-iar-data-warehouse-dev.commercial_product.dim_instance_customers cust ON cp.provisioning_account_id = cust.provisioning_account_id
-                    JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.product_activity_id = prod.product_activity_id
+                    JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.instance_id = prod.instance_id
                     JOIN fb_dual_sim_groups grp ON prod.group_id = grp.group_id
                     AND prod.subscription_plan_id = grp.subscription_plan_id
                 WHERE
@@ -303,6 +303,9 @@ CREATE OR REPLACE TABLE
                 FROM
                     position_data_range_3
             )
+            -- This portion is now handled as part of the published data source
+            -- on Tableau Server as we cannot join tables from different projects
+            -- in GCP.
             -- ,
             -- vessel AS (
             --     SELECT DISTINCT
