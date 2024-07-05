@@ -1,5 +1,5 @@
 CREATE OR REPLACE TABLE
-    inm-iar-data-warehouse-dev.td_dual_sims.dual_sims AS (
+    `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
         WITH
             dates AS (
                 SELECT
@@ -87,7 +87,7 @@ CREATE OR REPLACE TABLE
                     cp.installed_at
                 FROM
                     `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly_view` cp
-                    JOIN inm-iar-data-warehouse-dev.commercial_product.dim_instance_customers cust ON cp.provisioning_account_id = cust.provisioning_account_id
+                    JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_customers` cust ON cp.provisioning_account_id = cust.provisioning_account_id
                     JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.instance_id = prod.instance_id
                     JOIN fb_dual_sim_groups grp ON prod.group_id = grp.group_id
                     AND prod.subscription_plan_id = grp.subscription_plan_id
