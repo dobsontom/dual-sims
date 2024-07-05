@@ -1,5 +1,5 @@
 CREATE
-OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
+OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
     WITH
         dates AS (
             SELECT
@@ -93,7 +93,7 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                 cp.installed_at
             FROM
                 `inm-iar-data-warehouse-dev.commercial_product.commercial_product__monthly_view` cp
-                JOIN inm - iar - data - warehouse - dev.commercial_product.dim_instance_customers cust ON cp.provisioning_account_id = cust.provisioning_account_id
+                JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_customers` cust ON cp.provisioning_account_id = cust.provisioning_account_id
                 JOIN `inm-iar-data-warehouse-dev.commercial_product.dim_instance_products` prod ON cp.instance_id = prod.instance_id
                 JOIN fb_dual_sim_groups grp ON prod.group_id = grp.group_id
                 AND prod.subscription_plan_id = grp.subscription_plan_id
@@ -110,10 +110,9 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
             ORDER BY
                 grp.group_id
         ),
-        data_ranges AS (
+        data_range1 AS (
             SELECT
-                *,
-                1 AS range_id
+                *
             FROM
                 `network-data-ingest.users_maritime.urs_fb_pos_prev_6mths_tab`
             WHERE
@@ -128,10 +127,10 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                     FROM
                         gpsrecord_timestamp
                 ) BETWEEN 1 AND 10
-            UNION ALL
+        ),
+        data_range2 AS (
             SELECT
-                *,
-                2 AS range_id
+                *
             FROM
                 `network-data-ingest.users_maritime.urs_fb_pos_prev_6mths_tab`
             WHERE
@@ -146,10 +145,10 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                     FROM
                         gpsrecord_timestamp
                 ) BETWEEN 11 AND 20
-            UNION ALL
+        ),
+        data_range3 AS (
             SELECT
-                *,
-                3 AS range_id
+                *
             FROM
                 `network-data-ingest.users_maritime.urs_fb_pos_prev_6mths_tab`
             WHERE
@@ -165,7 +164,7 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                         gpsrecord_timestamp
                 ) BETWEEN 21 AND 31
         ),
-        position_data_ranges AS (
+        position_data_range_1 AS (
             SELECT
                 TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) minus,
                 TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL 60 MINUTE) plus,
@@ -186,7 +185,7 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                         a.longitude AS longitude_t1,
                         a.latitude AS latitude_t1
                     FROM
-                        data_ranges a
+                        data_range1 a
                         JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
                     WHERE
                         installed_at IS NOT NULL
@@ -199,7 +198,7 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                         a.longitude AS longitude_t2,
                         a.latitude AS latitude_t2
                     FROM
-                        data_ranges a
+                        data_range1 a
                         JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
                     WHERE
                         installed_at IS NOT NULL
@@ -207,6 +206,108 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
                 AND t1.objectid_t1 <> t2.objectid_t2
             WHERE
                 t2.noted_datetime_t2 BETWEEN TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) AND TIMESTAMP_ADD  (t1.noted_datetime_t1, INTERVAL 60 MINUTE)
+        ),
+        position_data_range_2 AS (
+            SELECT
+                TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) minus,
+                TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL 60 MINUTE) plus,
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY
+                        group_id_t1,
+                        DATE_TRUNC (t1.noted_datetime_t1, MONTH)
+                    ORDER BY
+                        objectid_t1 DESC
+                ) AS rk
+            FROM
+                (
+                    SELECT
+                        b.group_id group_id_t1,
+                        a.accessid objectid_t1,
+                        a.gpsrecord_timestamp noted_datetime_t1,
+                        a.longitude longitude_t1,
+                        a.latitude latitude_t1
+                    FROM
+                        data_range2 a
+                        JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
+                    WHERE
+                        installed_at IS NOT NULL
+                ) t1
+                JOIN (
+                    SELECT
+                        b.group_id group_id_t2,
+                        a.accessid objectid_t2,
+                        a.gpsrecord_timestamp noted_datetime_t2,
+                        a.longitude longitude_t2,
+                        a.latitude latitude_t2
+                    FROM
+                        data_range2 a
+                        JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
+                    WHERE
+                        installed_at IS NOT NULL
+                ) t2 ON t1.group_id_t1 = t2.group_id_t2
+                AND t1.objectid_t1 <> t2.objectid_t2
+            WHERE
+                t2.noted_datetime_t2 BETWEEN TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) AND TIMESTAMP_ADD  (t1.noted_datetime_t1, INTERVAL 60 MINUTE)
+        ),
+        position_data_range_3 AS (
+            SELECT
+                TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) minus,
+                TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL 60 MINUTE) plus,
+                *,
+                ROW_NUMBER() OVER (
+                    PARTITION BY
+                        group_id_t1,
+                        DATE_TRUNC (t1.noted_datetime_t1, MONTH)
+                    ORDER BY
+                        objectid_t1 DESC
+                ) AS rk
+            FROM
+                (
+                    SELECT
+                        b.group_id group_id_t1,
+                        a.accessid objectid_t1,
+                        a.gpsrecord_timestamp noted_datetime_t1,
+                        a.longitude longitude_t1,
+                        a.latitude latitude_t1
+                    FROM
+                        data_range3 a
+                        JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
+                    WHERE
+                        installed_at IS NOT NULL
+                ) t1
+                JOIN (
+                    SELECT
+                        b.group_id group_id_t2,
+                        a.accessid objectid_t2,
+                        a.gpsrecord_timestamp noted_datetime_t2,
+                        a.longitude longitude_t2,
+                        a.latitude latitude_t2
+                    FROM
+                        data_range3 a
+                        JOIN imsi_list b ON CAST(a.accessid AS STRING) = b.primary_network_name
+                    WHERE
+                        installed_at IS NOT NULL
+                ) t2 ON t1.group_id_t1 = t2.group_id_t2
+                AND t1.objectid_t1 <> t2.objectid_t2
+            WHERE
+                t2.noted_datetime_t2 BETWEEN TIMESTAMP_ADD (t1.noted_datetime_t1, INTERVAL -60 MINUTE) AND TIMESTAMP_ADD  (t1.noted_datetime_t1, INTERVAL 60 MINUTE)
+        ),
+        combined AS (
+            SELECT
+                *
+            FROM
+                position_data_range_1
+            UNION ALL
+            SELECT
+                *
+            FROM
+                position_data_range_2
+            UNION ALL
+            SELECT
+                *
+            FROM
+                position_data_range_3
         )
         -- This portion is now handled as part of the published data source
         -- on Tableau Server as we cannot join tables from different projects
@@ -235,7 +336,7 @@ OR REPLACE TABLE inm - iar - data - warehouse - dev.td_dual_sims.dual_sims AS (
         ST_GEOGPOINT (longitude_t2, latitude_t2) AS GeoPoint2,
         *
     FROM
-        position_data_ranges
+        combined
         -- JOIN vessel ON CAST(combined.objectid_t1 AS STRING) = vessel.l_band_imsi
     WHERE
         rk = 1
