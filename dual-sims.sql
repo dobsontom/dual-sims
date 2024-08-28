@@ -305,6 +305,4 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
         combined
     WHERE
         rank = 1
-    ORDER BY
-        3 DESC
 );
