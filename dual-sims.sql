@@ -131,7 +131,8 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
 
     position_data_range_1 AS (
         SELECT
-            *,
+            t1.*,
+            t2.*,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL -60 MINUTE) AS minus,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL 60 MINUTE) AS plus,
             ROW_NUMBER() OVER (
@@ -178,7 +179,8 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
 
     position_data_range_2 AS (
         SELECT
-            *,
+            t1.*,
+            t2.*,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL -60 MINUTE) AS minus,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL 60 MINUTE) AS plus,
             ROW_NUMBER() OVER (
@@ -225,7 +227,8 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
 
     position_data_range_3 AS (
         SELECT
-            *,
+            t1.*,
+            t2.*,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL -60 MINUTE) AS minus,
             TIMESTAMP_ADD(t1.noted_datetime_t1, INTERVAL 60 MINUTE) AS plus,
             ROW_NUMBER() OVER (
