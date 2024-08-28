@@ -141,7 +141,7 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
                     DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                 ORDER BY
                     t1.objectid_t1 DESC
-            ) AS rank
+            ) AS group_id_rank
         FROM
             (
                 SELECT
@@ -189,7 +189,7 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
                     DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                 ORDER BY
                     t1.objectid_t1 DESC
-            ) AS rank
+            ) AS group_id_rank
         FROM
             (
                 SELECT
@@ -237,7 +237,7 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
                     DATE_TRUNC(t1.noted_datetime_t1, MONTH)
                 ORDER BY
                     t1.objectid_t1 DESC
-            ) AS rank
+            ) AS group_id_rank
         FROM
             (
                 SELECT
@@ -304,5 +304,5 @@ CREATE OR REPLACE TABLE `inm-iar-data-warehouse-dev.td_dual_sims.dual_sims` AS (
     FROM
         combined
     WHERE
-        rank = 1
+        group_id_rank = 1
 );
